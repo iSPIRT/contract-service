@@ -6,7 +6,7 @@ set -ex
 
 : ${TDP_USERNAME:?"variable not set! Please run 'export TDP_USERNAME=<YOUR USERNAME>'"}
 
-TMP_DIR=tmp/$TDP_USERNAME
+TMP_DIR=/tmp/$TDP_USERNAME
 rm -rf $TMP_DIR
 mkdir -p $TMP_DIR
 scitt create-did-web --url https://$TDP_USERNAME.github.io --out-dir $TMP_DIR
