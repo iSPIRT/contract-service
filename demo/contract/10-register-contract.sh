@@ -5,9 +5,9 @@
 set -ex
 
 CONTRACT_SERVICE_URL=${CONTRACT_SERVICE_URL:-"https://127.0.0.1:8000"}
-TRUST_STORE=tmp/trust_store
+TRUST_STORE=/tmp/trust_store
 
-TMP_DIR=tmp/$TDC_USERNAME
+TMP_DIR=/tmp/$TDC_USERNAME
 
 scitt submit-contract $TMP_DIR/contract.cose \
     --receipt $TMP_DIR/contract.receipt.cbor \

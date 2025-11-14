@@ -5,11 +5,11 @@
 set -ex
 
 CONTRACT_SERVICE_URL=${CONTRACT_SERVICE_URL:-"https://127.0.0.1:8000"}
-TRUST_STORE=tmp/trust_store
+TRUST_STORE=/tmp/trust_store
 
-TMP_DIR=tmp/$TDP_USERNAME
+TMP_DIR=/tmp/$TDC_USERNAME
 
-scitt retrieve-contracts ./tmp/contracts \
+scitt retrieve-contracts /tmp/contracts \
     --url $CONTRACT_SERVICE_URL \
     --service-trust-store $TRUST_STORE \
     --from $CONTRACT_SEQ_NO \

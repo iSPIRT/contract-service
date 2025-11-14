@@ -4,9 +4,9 @@
 
 set -ex
 
-TRUST_STORE=tmp/trust_store
+TRUST_STORE=/tmp/trust_store
 
-TMP_DIR=tmp/$TDP_USERNAME
+TMP_DIR=/tmp/$TDP_USERNAME
 
 scitt validate-contract $TMP_DIR/contract.cose \
     --receipt $TMP_DIR/contract.receipt.cbor \
