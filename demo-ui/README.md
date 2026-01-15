@@ -1,6 +1,6 @@
 # DEPA Training - Contract Signing Demo UI
 
-A user-friendly web interface for demonstrating multi-party electronic contract signing for DEPA Training scenarios.
+A user-friendly web interface for demonstrating multi-party electronic contract signing for DEPA Training scenarios. Make sure you have completed the necessary steps on the [DEPA-Training](https://github.com/iSPIRT/depa-training) repo.
 
 ## Quick Start
 
@@ -11,6 +11,8 @@ From the project root directory, simply run:
 ```
 
 Then open your browser to **http://localhost:5050**
+
+By default, the demo connects to a live contract service at **https://216.48.178.54:8000**. You can change this in the UI configuration if you're running a local instance. If you encounter any issues with the live demo service, please contact the repository owners by opening an issue.
 
 ## Features
 

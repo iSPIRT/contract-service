@@ -13,7 +13,7 @@ This guide explains how to run the SCITT Contract Ledger service persistently (2
 First, build the Docker image:
 
 ```bash
-export PLATFORM=virtual
+export PLATFORM=<virtual|sgx>
 ./docker/build.sh
 ```
 
@@ -24,7 +24,7 @@ export PLATFORM=virtual
 Run the service for the first time:
 
 ```bash
-export PLATFORM=virtual
+export PLATFORM=<virtual|sgx>
 ./docker/run-service.sh
 ```
 
@@ -137,7 +137,7 @@ Once running, the service is available at:
 You can customize the port by setting `CCF_PORT` before running:
 
 ```bash
-export PLATFORM=virtual
+export PLATFORM=<virtual|sgx>
 export CCF_PORT=9000
 ./docker/run-service.sh
 ```
@@ -171,7 +171,7 @@ docker logs --tail 100 scitt-service
 3. Remove and recreate the service:
    ```bash
    ./docker/service-manager.sh remove
-   export PLATFORM=virtual
+   export PLATFORM=<virtual|sgx>
    ./docker/build.sh
    ./docker/run-service.sh
    ```
@@ -316,7 +316,7 @@ docker stop scitt-service
 # After maintenance - MUST clean and restart
 docker rm scitt-service
 docker volume rm scitt-service-vol
-export PLATFORM=virtual
+export PLATFORM=<virtual|sgx>
 ./docker/run-service.sh
 ```
 
