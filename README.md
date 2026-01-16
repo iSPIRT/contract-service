@@ -1,7 +1,7 @@
 # Contact Ledger Service
 
 This repository contains the source code for contract service, an application
-that runs on top of [CCF](https://ccf.dev/) implementing standards developed within the [DEPA Training Framework](https://github.com/kapilvgit/depa-training/). Its purpose is to provide registry for contracts. The contract service achieves this by allowing signed contracts to be submitted to a secure immutable ledger, and returning receipts which prove contracts have been stored.
+that runs on top of [CCF](https://ccf.dev/) implementing standards developed within the [DEPA Training Framework](https://github.com/iSPIRT/depa-training/). Its purpose is to provide registry for contracts. The contract service achieves this by allowing signed contracts to be submitted to a secure immutable ledger, and returning receipts which prove contracts have been stored.
 
 This research project is at an early stage and is open sourced to facilitate academic collaborations. We are keen to engage in research collaborations on this project, please do reach out to discuss this by opening an issue.
 
@@ -13,9 +13,11 @@ Being a CCF application, contract service runs in SGX enclaves. However, for tes
 
 All instructions below assume Linux as the operating system.
 
-### Sign and Register Contracts
+### Quick Demo
 
-Follow [instructions](./demo/contract/README.md) on how to sign and register contracts with an existing contract service.
+A live demo contract service (single-node, virtual mode) is available at **https://216.48.178.54:8000**. You can interact with it using the [demo UI](./demo-ui/README.md), which provides a user-friendly web interface for demonstrating multi-party electronic contract signing for select DEPA Training scenarios. To get started, run `./launch-demo.sh` from the project root and open your browser to http://localhost:5050.
+
+If you encounter any issues with the live demo service, please contact the repository owners by opening an issue.
 
 ### Build and Deploy using Docker
 
@@ -31,7 +33,13 @@ export PLATFORM=<sgx|virtual>
 
 The node is now reachable at https://127.0.0.1:8000/.
 
+Alternatively, a live demo contract service is available at **https://216.48.178.54:8000** for testing purposes. If you encounter any issues, please contact the repository owners by opening an issue.
+
 Note that `run-dev.sh` configures the network in a way that is not suitable for production, in particular it generates an ad-hoc governance member key pair and it disables API authentication.
+
+### Sign and Register Contracts
+
+Follow [instructions](./demo/contract/README.md) on how to sign and register contracts with an active contract service. You can also try the [demo UI](./demo-ui/README.md) to sign and register contracts using a user-friendly web interface.
 
 ### Development setup
 

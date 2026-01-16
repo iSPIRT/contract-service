@@ -1,0 +1,2293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEPA Training - Contract Signing Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1a;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --bg-card: #1a2332;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border-color: #374151;
+            --gradient-1: linear-gradient(135deg, #06b6d4, #3b82f6);
+            --gradient-2: linear-gradient(135deg, #8b5cf6, #ec4899);
+            --gradient-3: linear-gradient(135deg, #10b981, #06b6d4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            flex: 1;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--gradient-1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Main Layout - Two Column */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            min-height: calc(100vh - 90px);
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .contract-panel {
+                display: none;
+            }
+        }
+
+        /* Left Panel - Steps */
+        .steps-panel {
+            padding: 1.5rem 2rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 90px);
+        }
+
+        /* Right Panel - Contract Viewer */
+        .contract-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 90px);
+        }
+
+        .contract-panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .contract-panel-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .contract-panel-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .contract-panel-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .contract-panel-status {
+            margin-left: auto;
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .contract-panel-status.empty {
+            background: rgba(107, 114, 128, 0.2);
+            color: var(--text-muted);
+        }
+
+        .contract-panel-status.template {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+        }
+
+        .contract-panel-status.configured {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .contract-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .contract-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .contract-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .contract-json {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            padding: 1rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #8b949e;
+        }
+
+        /* Progress Steps */
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            padding: 0 1rem;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.6rem;
+        }
+
+        .progress-step::after {
+            content: '→';
+            color: var(--border-color);
+            font-size: 0.75rem;
+            margin-left: 0.25rem;
+        }
+
+        .progress-step:last-child::after { display: none; }
+
+        .step-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .progress-step.active .step-dot {
+            background: var(--gradient-1);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+        }
+
+        .progress-step.completed .step-dot {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .progress-step.completed .step-dot::after {
+            content: '✓';
+            color: white;
+            font-size: 0.6rem;
+        }
+
+        .step-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .progress-step.active .step-label {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .progress-step.completed .step-label {
+            color: var(--accent-green);
+        }
+
+        /* Step Card */
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .step-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .step-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        /* Scenarios Grid */
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .scenarios-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .scenarios-grid { grid-template-columns: 1fr; }
+        }
+
+        .scenario-card {
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .scenario-card:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .scenario-card.selected {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.15);
+            box-shadow: 0 0 16px rgba(6, 182, 212, 0.2);
+        }
+
+        .scenario-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .scenario-name { font-weight: 700; font-size: 1rem; margin-bottom: 0.4rem; }
+        .scenario-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* Role Grid */
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .role-card {
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .role-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .role-card.selected {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.15);
+            box-shadow: 0 0 16px rgba(139, 92, 246, 0.2);
+        }
+
+        .role-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .role-name { font-weight: 700; font-size: 1.2rem; }
+        .role-full-name { font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0.5rem; }
+        .role-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 700px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+
+        label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 0.7rem 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.7rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover { border-color: var(--accent-cyan); }
+
+        .btn-success { background: var(--accent-green); color: white; }
+
+        .btn-danger {
+            background: var(--accent-rose);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            justify-content: flex-end;
+        }
+
+        /* Terminal Output */
+        .output-terminal {
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: var(--bg-tertiary);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27c93f; }
+
+        .terminal-body {
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #8b949e;
+        }
+
+        .terminal-body pre { white-space: pre-wrap; word-break: break-all; }
+        .terminal-body .success { color: var(--accent-green); }
+        .terminal-body .error { color: var(--accent-rose); }
+
+        /* Info boxes */
+        .info-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .info-box-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .info-box-content { flex: 1; }
+        .info-box-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+        .info-box-text { font-size: 0.8rem; color: var(--text-secondary); }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        /* Sequence Number Display */
+        .seq-number-display {
+            background: var(--gradient-1);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .seq-number-label { font-size: 0.85rem; color: rgba(255,255,255,0.8); margin-bottom: 0.3rem; }
+        .seq-number-value { font-size: 2.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .seq-number-hint { font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-top: 0.3rem; }
+
+        /* DID Link */
+        .did-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+
+        .did-link:hover { text-decoration: underline; }
+
+        /* Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* GitHub Banner */
+        .github-banner {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .github-banner-icon { font-size: 1.25rem; }
+        .github-banner-text { flex: 1; }
+        .github-banner-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.15rem; }
+        .github-banner-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* GitHub Auth Panel */
+        .github-auth-panel {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .github-auth-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .github-auth-icon {
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .github-auth-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+
+        .github-auth-status {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-indicator.checking {
+            background: var(--accent-amber);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .status-indicator.logged-in {
+            background: var(--accent-green);
+        }
+
+        .status-indicator.logged-out {
+            background: var(--accent-rose);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Logged In State */
+        .github-auth-logged-in {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+
+        .logged-in-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logged-in-icon { font-size: 1.25rem; }
+
+        .logged-in-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .logged-in-username {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--accent-green);
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Login Methods */
+        .login-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .login-method {
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+        }
+
+        .login-method-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .login-method-icon { font-size: 1rem; }
+
+        .login-method-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .login-method-badge {
+            background: var(--accent-green);
+            color: white;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .login-method-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.6rem;
+            line-height: 1.4;
+        }
+
+        .login-method-desc code {
+            background: var(--bg-tertiary);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+
+        .login-method-desc a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+        }
+
+        .login-method-desc a:hover {
+            text-decoration: underline;
+        }
+
+        .login-divider {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            position: relative;
+        }
+
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .login-divider::before { left: 0; }
+        .login-divider::after { right: 0; }
+
+        .token-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .token-input {
+            flex: 1;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Pending State */
+        .github-auth-pending {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+
+        .pending-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .pending-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .pending-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .pending-instructions {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .pending-instructions a {
+            color: var(--accent-cyan);
+        }
+
+        .device-code {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* DID Creation Section */
+        .did-creation-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Reset */
+        .reset-container {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-tertiary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Hide inactive steps */
+        .step-content { display: none; }
+        .step-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="width: 120px;"></div> <!-- Spacer for centering -->
+        <div class="logo">
+            <div class="logo-icon">📜</div>
+            <h1>DEPA Training - Contract Signing Demo</h1>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="shutdownServer()" title="Gracefully shutdown the server">
+            🔌 Close App
+        </button>
+    </header>
+
+    <div class="main-layout">
+        <!-- Left Panel - Steps -->
+        <div class="steps-panel">
+            <!-- Progress Steps -->
+            <div class="progress-steps" id="progress-steps">
+                <div class="progress-step active" data-step="1">
+                    <div class="step-dot">1</div>
+                    <span class="step-label">Scenario</span>
+                </div>
+                <div class="progress-step" data-step="2">
+                    <div class="step-dot">2</div>
+                    <span class="step-label">Configure</span>
+                </div>
+                <div class="progress-step" data-step="3">
+                    <div class="step-dot">3</div>
+                    <span class="step-label">Role</span>
+                </div>
+                <div class="progress-step" data-step="4">
+                    <div class="step-dot">4</div>
+                    <span class="step-label">Create DID</span>
+                </div>
+                <div class="progress-step" data-step="5">
+                    <div class="step-dot">5</div>
+                    <span class="step-label">Verify DID</span>
+                </div>
+                <div class="progress-step" data-step="6">
+                    <div class="step-dot">6</div>
+                    <span class="step-label">Sign</span>
+                </div>
+                <div class="progress-step" data-step="7">
+                    <div class="step-dot">7</div>
+                    <span class="step-label">Register</span>
+                </div>
+                <div class="progress-step" data-step="8">
+                    <div class="step-dot">8</div>
+                    <span class="step-label">Receipt</span>
+                </div>
+                <div class="progress-step" data-step="9">
+                    <div class="step-dot">9</div>
+                    <span class="step-label">Validate</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Select Scenario -->
+            <div class="step-content active" id="step-1">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--gradient-1);">🎯</div>
+                        <div>
+                            <h2 class="step-title">Select Scenario</h2>
+                            <p class="step-subtitle">Choose a DEPA Training scenario</p>
+                        </div>
+                    </div>
+
+                    <div class="scenarios-grid">
+                        <div class="scenario-card" data-scenario="brats" onclick="selectScenario('brats')">
+                            <div class="scenario-icon">🧠</div>
+                            <div class="scenario-name">BraTS</div>
+                            <p class="scenario-desc">Brain tumor segmentation with 4 MRI providers</p>
+                        </div>
+                        <div class="scenario-card" data-scenario="covid" onclick="selectScenario('covid')">
+                            <div class="scenario-icon">🦠</div>
+                            <div class="scenario-name">COVID-19</div>
+                            <p class="scenario-desc">COVID-19 pandemic modelling combining data from ICMR, CoWIN and State War Rooms</p>
+                        </div>
+                        <div class="scenario-card" data-scenario="credit-risk" onclick="selectScenario('credit-risk')">
+                            <div class="scenario-icon">💳</div>
+                            <div class="scenario-name">Credit Risk</div>
+                            <p class="scenario-desc">Multi-party credit risk assessment</p>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="btn-step1-next" disabled onclick="goToStep(2)">
+                            Continue →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Configure Variables -->
+            <div class="step-content" id="step-2">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--gradient-3);">⚙️</div>
+                        <div>
+                            <h2 class="step-title">Configuration</h2>
+                            <p class="step-subtitle">Enter environment variables and update the contract</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>TDP GitHub Username</label>
+                            <input type="text" id="tdp_username" value="ccrdepatesttdp">
+                        </div>
+                        <div class="form-group">
+                            <label>TDC GitHub Username</label>
+                            <input type="text" id="tdc_username" value="ccrdepatesttdc">
+                        </div>
+                        <div class="form-group">
+                            <label>CCRP Username</label>
+                            <input type="text" id="ccrp_username" value="ccrprovider">
+                        </div>
+                        <div class="form-group">
+                            <label>Azure Storage Account</label>
+                            <input type="text" id="azure_storage_account" value="depatraindemo">
+                        </div>
+                        <div class="form-group">
+                            <label>Azure KeyVault Endpoint</label>
+                            <input type="text" id="azure_keyvault" value="depa-train-ccr-dev-akv.vault.azure.net">
+                        </div>
+                        <div class="form-group">
+                            <label>Contract Service URL</label>
+                            <input type="text" id="contract_service_url" value="https://216.48.178.54:8000">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                        <button class="btn btn-primary" id="btn-update-contract" onclick="updateContract()">
+                            Update Contract & Continue →
+                        </button>
+                    </div>
+
+                    <div id="update-output"></div>
+                </div>
+            </div>
+
+            <!-- Step 3: Select Role -->
+            <div class="step-content" id="step-3">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--gradient-2);">👤</div>
+                        <div>
+                            <h2 class="step-title">Select Role</h2>
+                            <p class="step-subtitle">Choose your role in the contract signing process</p>
+                        </div>
+                    </div>
+
+                    <div class="role-grid">
+                        <div class="role-card" data-role="tdp" onclick="selectRole('tdp')">
+                            <div class="role-icon">🔐</div>
+                            <div class="role-name">TDP</div>
+                            <div class="role-full-name">Training Data Provider</div>
+                            <p class="role-desc">Provide datasets and initiate contract signing</p>
+                        </div>
+                        <div class="role-card" data-role="tdc" onclick="selectRole('tdc')">
+                            <div class="role-icon">🔬</div>
+                            <div class="role-name">TDC</div>
+                            <div class="role-full-name">Training Data Consumer</div>
+                            <p class="role-desc">Consume training data and co-sign the contract</p>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+                        <button class="btn btn-primary" id="btn-step3-next" disabled onclick="goToStep(4)">
+                            Continue →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Create DID -->
+            <div class="step-content" id="step-4">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--gradient-2);">🆔</div>
+                        <div>
+                            <h2 class="step-title">Create DID</h2>
+                            <p class="step-subtitle">Create a Decentralized Identifier and publish to GitHub Pages</p>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Authentication Panel -->
+                    <div class="github-auth-panel" id="github-auth-panel">
+                        <div class="github-auth-header">
+                            <span class="github-auth-icon">
+                                <svg height="24" viewBox="0 0 16 16" width="24" fill="currentColor">
+                                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                                </svg>
+                            </span>
+                            <div class="github-auth-title">GitHub Authentication</div>
+                            <div class="github-auth-status" id="github-auth-status">
+                                <span class="status-indicator checking"></span>
+                                <span class="status-text">Checking...</span>
+                            </div>
+                        </div>
+
+                        <!-- Logged In State -->
+                        <div class="github-auth-logged-in" id="github-logged-in" style="display: none;">
+                            <div class="logged-in-info">
+                                <span class="logged-in-icon">✅</span>
+                                <div>
+                                    <div class="logged-in-label">Logged in as</div>
+                                    <div class="logged-in-username" id="github-username">@username</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="logoutGitHub()">Logout</button>
+                        </div>
+
+                        <!-- Not Logged In State -->
+                        <div class="github-auth-login" id="github-login" style="display: none;">
+                            <div class="login-methods">
+                                <div class="login-method">
+                                    <div class="login-method-header">
+                                        <span class="login-method-icon">🌐</span>
+                                        <span class="login-method-title">Browser Login</span>
+                                        <span class="login-method-badge">Recommended</span>
+                                    </div>
+                                    <p class="login-method-desc">Opens GitHub in a new tab to authenticate</p>
+                                    <button class="btn btn-primary" id="btn-github-device" onclick="loginGitHubDevice()">
+                                        Login with GitHub
+                                    </button>
+                                </div>
+                                <div class="login-divider">
+                                    <span>or</span>
+                                </div>
+                                <div class="login-method">
+                                    <div class="login-method-header">
+                                        <span class="login-method-icon">🔑</span>
+                                        <span class="login-method-title">Personal Access Token</span>
+                                    </div>
+                                    <p class="login-method-desc">
+                                        Use a GitHub PAT with <code>repo</code> scope. 
+                                        <a href="https://github.com/settings/tokens/new?scopes=repo&description=DEPA-Training-Demo" target="_blank">Create token →</a>
+                                    </p>
+                                    <div class="token-input-group">
+                                        <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx" class="token-input">
+                                        <button class="btn btn-secondary" onclick="loginGitHubToken()">Login</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Device Flow Pending -->
+                        <div class="github-auth-pending" id="github-pending" style="display: none;">
+                            <div class="pending-info">
+                                <div class="pending-spinner"></div>
+                                <div>
+                                    <div class="pending-title">Waiting for authentication...</div>
+                                    <div class="pending-instructions">
+                                        1. Go to <a href="https://github.com/login/device" target="_blank" id="device-auth-url">github.com/login/device</a><br>
+                                        2. Enter code: <code class="device-code" id="device-code">XXXX-XXXX</code>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="cancelDeviceFlow()">Cancel</button>
+                        </div>
+
+                        <div id="github-auth-output"></div>
+                    </div>
+
+                    <!-- DID Creation Section -->
+                    <div class="did-creation-section" id="did-creation-section">
+                        <div class="info-box warning-box">
+                            <span class="info-box-icon">⚠️</span>
+                            <div class="info-box-content">
+                                <div class="info-box-title">One-Time Setup</div>
+                                <div class="info-box-text">If you've already created a DID for this GitHub account, you can skip this step.</div>
+                            </div>
+                        </div>
+
+                        <p style="margin-bottom: 1rem;">Creating DID for: <strong id="did-username"></strong></p>
+
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button class="btn btn-primary" id="btn-create-did" onclick="createDID()">Create DID</button>
+                            <button class="btn btn-secondary" onclick="goToStep(5)">Skip (Already Created)</button>
+                        </div>
+
+                        <div id="did-output"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+                        <button class="btn btn-primary" onclick="goToStep(5)">Continue to Verify →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Verify DID -->
+            <div class="step-content" id="step-5">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--accent-green);">✓</div>
+                        <div>
+                            <h2 class="step-title">Verify DID</h2>
+                            <p class="step-subtitle">Confirm your DID is published and accessible</p>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-box-icon">🔗</span>
+                        <div class="info-box-content">
+                            <div class="info-box-title">DID URL</div>
+                            <div class="info-box-text">
+                                <a class="did-link" id="did-url-link" href="#" target="_blank"></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-verify-did" onclick="verifyDID()">Verify DID</button>
+
+                    <div id="verify-output"></div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+                        <button class="btn btn-primary" onclick="proceedAfterVerify()">Continue →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5.5: Retrieve Contract (TDC only) -->
+            <div class="step-content" id="step-5-5">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--accent-amber);">📥</div>
+                        <div>
+                            <h2 class="step-title">Retrieve Contract</h2>
+                            <p class="step-subtitle">Download the contract from the contract service</p>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-box-icon">ℹ️</span>
+                        <div class="info-box-content">
+                            <div class="info-box-title">Contract Sequence Number Required</div>
+                            <div class="info-box-text">Enter the sequence number provided by TDP after they registered the contract.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="max-width: 300px;">
+                        <label>Contract Sequence Number</label>
+                        <input type="number" id="retrieve_seq_no" placeholder="Enter seq number from TDP">
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-retrieve" onclick="retrieveContract()" style="margin-top: 0.75rem;">
+                        Retrieve Contract
+                    </button>
+
+                    <div id="retrieve-output"></div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goToStep(5)">← Back</button>
+                        <button class="btn btn-primary" id="btn-step5-5-next" disabled onclick="goToStep(6)">Continue to Sign →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Sign Contract -->
+            <div class="step-content" id="step-6">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--gradient-2);">✍️</div>
+                        <div>
+                            <h2 class="step-title">Sign Contract</h2>
+                            <p class="step-subtitle" id="sign-subtitle">Sign the contract with your DID</p>
+                        </div>
+                    </div>
+
+                    <div id="sign-seq-info" style="display: none; margin-bottom: 1rem;">
+                        <div class="info-box">
+                            <span class="info-box-icon">📄</span>
+                            <div class="info-box-content">
+                                <div class="info-box-title">Signing Contract</div>
+                                <div class="info-box-text">
+                                    You will be adding your signature to contract sequence number: <strong id="sign-seq-display"></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sign-seq-input" style="display: none; margin-bottom: 1rem;">
+                        <div class="form-group" style="max-width: 300px;">
+                            <label>Contract Sequence Number</label>
+                            <input type="number" id="sign_seq_no" placeholder="Enter sequence number">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-sign" onclick="signContract()">Sign Contract</button>
+
+                    <div id="sign-output"></div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" id="btn-step6-back" onclick="goBackFromSign()">← Back</button>
+                        <button class="btn btn-primary" id="btn-step6-next" disabled onclick="goToStep(7)">Continue to Register →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7: Register Contract -->
+            <div class="step-content" id="step-7">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--accent-green);">📤</div>
+                        <div>
+                            <h2 class="step-title">Register Contract</h2>
+                            <p class="step-subtitle">Submit the signed contract to the contract service</p>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-register" onclick="registerContract()">Register Contract</button>
+
+                    <div id="register-output"></div>
+                    <div id="seq-number-result"></div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goToStep(6)">← Back</button>
+                        <button class="btn btn-primary" id="btn-step7-next" disabled onclick="goToStep(8)">Continue to Receipt →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 8: View Receipt -->
+            <div class="step-content" id="step-8">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--accent-amber);">🧾</div>
+                        <div>
+                            <h2 class="step-title">View Receipt</h2>
+                            <p class="step-subtitle">Review the contract registration receipt</p>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-receipt" onclick="viewReceipt()">View Receipt</button>
+
+                    <div id="receipt-output"></div>
+
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="goToStep(7)">← Back</button>
+                        <button class="btn btn-primary" onclick="goToStep(9)">Continue to Validate →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 9: Validate Contract -->
+            <div class="step-content" id="step-9">
+                <div class="step-card">
+                    <div class="step-header">
+                        <div class="step-icon" style="background: var(--accent-green);">✅</div>
+                        <div>
+                            <h2 class="step-title">Validate Contract</h2>
+                            <p class="step-subtitle">Verify the signed contract and receipt</p>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-validate" onclick="validateContract()">Validate Contract</button>
+
+                    <div id="validate-output"></div>
+
+                    <div class="reset-container" id="completion-actions">
+                        <p style="color: var(--text-muted); margin-bottom: 0.75rem;">Contract signing process complete!</p>
+                        
+                        <!-- Show different options based on role -->
+                        <div id="tdp-completion" style="display: none;">
+                            <div class="info-box" style="margin-bottom: 1rem;">
+                                <span class="info-box-icon">💡</span>
+                                <div class="info-box-content">
+                                    <div class="info-box-title">Next Step: TDC Signing</div>
+                                    <div class="info-box-text">
+                                        The contract is now registered. The TDC can retrieve it using sequence number: <strong id="stored-seq-no"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                                <button class="btn btn-primary" onclick="continueAsTDC()">
+                                    Continue as TDC →
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetDemo()">
+                                    🔄 Start New Demo
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="tdc-completion" style="display: none;">
+                            <button class="btn btn-secondary" onclick="resetDemo()">🔄 Start New Demo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Contract Viewer -->
+        <div class="contract-panel">
+            <div class="contract-panel-header">
+                <div class="contract-panel-icon">📄</div>
+                <div>
+                    <div class="contract-panel-title">Contract State</div>
+                    <div class="contract-panel-subtitle" id="contract-filename">No contract loaded</div>
+                </div>
+                <span class="contract-panel-status empty" id="contract-status">Empty</span>
+            </div>
+            <div class="contract-panel-body">
+                <div class="contract-empty" id="contract-empty">
+                    <div class="contract-empty-icon">📋</div>
+                    <p>Select a scenario to view<br>the contract template</p>
+                </div>
+                <pre class="contract-json" id="contract-json" style="display: none;"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let state = {
+            currentStep: 1,
+            scenario: null,
+            role: null,
+            contractSeqNo: null,
+            templateJson: null,
+            contractJson: null
+        };
+
+        const SCENARIO_NAMES = {
+            'brats': 'BraTS',
+            'covid': 'COVID-19',
+            'credit-risk': 'Credit Risk'
+        };
+
+        function getConfig() {
+            return {
+                TDP_USERNAME: document.getElementById('tdp_username').value,
+                TDC_USERNAME: document.getElementById('tdc_username').value,
+                CCRP_USERNAME: document.getElementById('ccrp_username').value,
+                AZURE_STORAGE_ACCOUNT_NAME: document.getElementById('azure_storage_account').value,
+                AZURE_KEYVAULT_ENDPOINT: document.getElementById('azure_keyvault').value,
+                CONTRACT_SERVICE_URL: document.getElementById('contract_service_url').value
+            };
+        }
+
+        function updateContractPanel(json, status, filename) {
+            const emptyEl = document.getElementById('contract-empty');
+            const jsonEl = document.getElementById('contract-json');
+            const statusEl = document.getElementById('contract-status');
+            const filenameEl = document.getElementById('contract-filename');
+
+            if (json) {
+                emptyEl.style.display = 'none';
+                jsonEl.style.display = 'block';
+                jsonEl.textContent = JSON.stringify(json, null, 2);
+                filenameEl.textContent = filename || 'contract.json';
+            } else {
+                emptyEl.style.display = 'flex';
+                jsonEl.style.display = 'none';
+                filenameEl.textContent = 'No contract loaded';
+            }
+
+            statusEl.className = 'contract-panel-status ' + (status || 'empty');
+            statusEl.textContent = status === 'template' ? 'Template' : 
+                                   status === 'configured' ? 'Configured' : 'Empty';
+        }
+
+        function updateProgressSteps() {
+            document.querySelectorAll('.progress-step').forEach((el, idx) => {
+                const stepNum = idx + 1;
+                el.classList.remove('active', 'completed');
+                if (stepNum < state.currentStep) {
+                    el.classList.add('completed');
+                } else if (stepNum === Math.floor(state.currentStep)) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        function showStep(stepNum) {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            const stepEl = document.getElementById(`step-${stepNum}`);
+            if (stepEl) stepEl.classList.add('active');
+        }
+
+        function goToStep(stepNum) {
+            if (stepNum === 6 && state.role === 'tdc' && state.currentStep === 5) {
+                stepNum = '5-5';
+            }
+            state.currentStep = typeof stepNum === 'string' ? parseFloat(stepNum.replace('-', '.')) : stepNum;
+            updateProgressSteps();
+            showStep(stepNum);
+            
+            // Check GitHub auth when entering step 4 (Create DID)
+            if (stepNum === 4) {
+                checkGitHubAuth();
+            }
+            
+            // Update sign screen when entering step 6
+            if (stepNum === 6) {
+                // Reset sign button to ensure it's enabled
+                resetActionButton('btn-sign', 'Sign Contract');
+                
+                if (state.role === 'tdc') {
+                    const seqNo = document.getElementById('sign_seq_no').value || state.contractSeqNo;
+                    if (seqNo) {
+                        document.getElementById('sign-seq-info').style.display = 'block';
+                        document.getElementById('sign-seq-display').textContent = seqNo;
+                    }
+                }
+            }
+        }
+
+        function proceedAfterVerify() {
+            goToStep(state.role === 'tdc' ? '5-5' : 6);
+        }
+
+        function goBackFromSign() {
+            goToStep(state.role === 'tdc' ? '5-5' : 5);
+        }
+
+        async function selectScenario(scenario) {
+            state.scenario = scenario;
+            document.querySelectorAll('.scenario-card').forEach(el => {
+                el.classList.toggle('selected', el.dataset.scenario === scenario);
+            });
+            document.getElementById('btn-step1-next').disabled = false;
+
+            // Load template and update contract panel
+            try {
+                const response = await fetch(`/api/template/${scenario}`);
+                const result = await response.json();
+                state.templateJson = result.template;
+                updateContractPanel(result.template, 'template', `${scenario}-contract-template.json`);
+            } catch (error) {
+                console.error('Error loading template:', error);
+            }
+        }
+
+        function selectRole(role) {
+            state.role = role;
+            document.querySelectorAll('.role-card').forEach(el => {
+                el.classList.toggle('selected', el.dataset.role === role);
+            });
+            document.getElementById('btn-step3-next').disabled = false;
+
+            const config = getConfig();
+            const username = role === 'tdp' ? config.TDP_USERNAME : config.TDC_USERNAME;
+            document.getElementById('did-username').textContent = username;
+            document.getElementById('did-url-link').href = `https://${username}.github.io/.well-known/did.json`;
+            document.getElementById('did-url-link').textContent = `https://${username}.github.io/.well-known/did.json`;
+            document.getElementById('sign-subtitle').textContent = 
+                role === 'tdp' ? 'Sign the contract as Training Data Provider' : 'Add your signature as Training Data Consumer';
+            
+            // Show seq input for TDC
+            document.getElementById('sign-seq-input').style.display = role === 'tdc' ? 'block' : 'none';
+            
+            // Remove transition banner if it exists
+            const banner = document.getElementById('tdc-transition-banner');
+            if (banner) {
+                banner.remove();
+            }
+        }
+
+        async function updateContract() {
+            const btn = document.getElementById('btn-update-contract');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Updating...';
+
+            try {
+                const config = getConfig();
+                const response = await fetch('/api/setup/contract-template', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: state.scenario, config })
+                });
+
+                const result = await response.json();
+                const outputEl = document.getElementById('update-output');
+
+                if (result.success) {
+                    state.contractJson = result.contract;
+                    updateContractPanel(result.contract, 'configured', 'contract.json');
+                    
+                    outputEl.innerHTML = `
+                        <div class="info-box success-box" style="margin-top: 1rem;">
+                            <span class="info-box-icon">✅</span>
+                            <div class="info-box-content">
+                                <div class="info-box-title">Contract Updated Successfully</div>
+                                <div class="info-box-text">Variables substituted. Contract is ready for signing.</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    btn.innerHTML = 'Continue to Role Selection →';
+                    btn.onclick = () => goToStep(3);
+                    btn.disabled = false;
+                } else {
+                    throw new Error(result.error || 'Update failed');
+                }
+            } catch (error) {
+                document.getElementById('update-output').innerHTML = createErrorTerminal(error.message);
+                btn.innerHTML = 'Retry Update';
+                btn.disabled = false;
+            }
+        }
+
+        async function createDID() {
+            const btn = document.getElementById('btn-create-did');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Creating...';
+
+            const endpoint = state.role === 'tdp' ? '/api/step/create-did-tdp' : '/api/step/create-did-tdc';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ config: getConfig() })
+                });
+
+                const result = await response.json();
+                const outputEl = document.getElementById('did-output');
+
+                if (result.success) {
+                    outputEl.innerHTML = createSuccessTerminal(result.output);
+                    btn.innerHTML = '✓ DID Created';
+                    btn.classList.add('btn-success');
+                } else {
+                    throw new Error(result.error || result.output || 'Failed');
+                }
+            } catch (error) {
+                document.getElementById('did-output').innerHTML = createErrorTerminal(error.message);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+            }
+        }
+
+        async function verifyDID() {
+            const btn = document.getElementById('btn-verify-did');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Verifying...';
+
+            const config = getConfig();
+            const username = state.role === 'tdp' ? config.TDP_USERNAME : config.TDC_USERNAME;
+
+            try {
+                const response = await fetch('/api/step/verify-did', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+
+                const result = await response.json();
+                const outputEl = document.getElementById('verify-output');
+
+                if (result.success) {
+                    outputEl.innerHTML = `
+                        <div class="info-box success-box" style="margin-top: 1rem;">
+                            <span class="info-box-icon">✅</span>
+                            <div class="info-box-content">
+                                <div class="info-box-title">DID Verified Successfully</div>
+                                <div class="info-box-text">Your DID is published and accessible.</div>
+                            </div>
+                        </div>
+                    `;
+                    btn.innerHTML = '✓ Verified';
+                    btn.classList.add('btn-success');
+                } else {
+                    throw new Error(result.error || 'DID not found');
+                }
+            } catch (error) {
+                document.getElementById('verify-output').innerHTML = `
+                    <div class="info-box warning-box" style="margin-top: 1rem;">
+                        <span class="info-box-icon">⚠️</span>
+                        <div class="info-box-content">
+                            <div class="info-box-title">Verification Failed</div>
+                            <div class="info-box-text">${escapeHtml(error.message)}</div>
+                        </div>
+                    </div>
+                `;
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+            }
+        }
+
+        async function retrieveContract() {
+            const seqNo = document.getElementById('retrieve_seq_no').value;
+            if (!seqNo) { alert('Please enter the contract sequence number'); return; }
+
+            state.contractSeqNo = parseInt(seqNo);
+            const btn = document.getElementById('btn-retrieve');
+            const outputEl = document.getElementById('retrieve-output');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Retrieving...';
+
+            console.log('Retrieving contract with sequence number:', state.contractSeqNo);
+            outputEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 1rem;">Retrieving contract, please wait...</div>';
+
+            try {
+                const response = await fetch('/api/step/retrieve-contract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ config: getConfig(), sequence_number: state.contractSeqNo })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server error (${response.status}): ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('Retrieve result:', result);
+
+                if (result.success) {
+                    outputEl.innerHTML = createSuccessTerminal(result.output);
+                    btn.innerHTML = '✓ Retrieved';
+                    btn.classList.add('btn-success');
+                    document.getElementById('btn-step5-5-next').disabled = false;
+                    document.getElementById('sign_seq_no').value = seqNo;
+                    console.log('Sequence number set for signing:', seqNo);
+                    
+                    // Reset sign button in case of retry after previous failure
+                    resetActionButton('btn-sign', 'Sign Contract');
+                } else {
+                    throw new Error(result.error || result.output || 'Retrieval failed');
+                }
+            } catch (error) {
+                console.error('Retrieve error:', error);
+                outputEl.innerHTML = createErrorTerminal(error.message);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+            }
+        }
+
+        async function signContract() {
+            const btn = document.getElementById('btn-sign');
+            const outputEl = document.getElementById('sign-output');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Signing...';
+
+            const endpoint = state.role === 'tdp' ? '/api/step/sign-contract-tdp' : '/api/step/sign-contract-tdc';
+            const body = { config: getConfig() };
+
+            if (state.role === 'tdc') {
+                const seqNo = document.getElementById('sign_seq_no').value || state.contractSeqNo;
+                console.log('TDC signing with sequence number:', seqNo);
+                if (!seqNo) { 
+                    alert('Please enter the sequence number'); 
+                    btn.disabled = false; 
+                    btn.innerHTML = 'Sign Contract'; 
+                    return; 
+                }
+                body.sequence_number = parseInt(seqNo);
+            }
+
+            console.log('Signing contract with body:', body);
+            outputEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 1rem;">Signing contract, please wait...</div>';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Server error (${response.status}): ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('Sign result:', result);
+
+                if (result.success) {
+                    outputEl.innerHTML = createSuccessTerminal(result.output);
+                    btn.innerHTML = '✓ Signed';
+                    btn.classList.add('btn-success');
+                    document.getElementById('btn-step6-next').disabled = false;
+                } else {
+                    throw new Error(result.error || result.output || 'Signing failed');
+                }
+            } catch (error) {
+                console.error('Sign error:', error);
+                outputEl.innerHTML = createErrorTerminal(error.message);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+            }
+        }
+
+        async function registerContract() {
+            const btn = document.getElementById('btn-register');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Registering...';
+
+            const endpoint = state.role === 'tdp' ? '/api/step/register-contract-tdp' : '/api/step/register-contract-tdc';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ config: getConfig() })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('register-output').innerHTML = createSuccessTerminal(result.output);
+
+                    // Display sequence number for both TDP and TDC
+                    if (result.sequence_number) {
+                        state.contractSeqNo = result.sequence_number;
+                        
+                        const hintText = state.role === 'tdp' 
+                            ? 'Share this with TDC to retrieve and sign'
+                            : 'Your co-signed contract has been registered';
+                        
+                        document.getElementById('seq-number-result').innerHTML = `
+                            <div class="seq-number-display">
+                                <div class="seq-number-label">Contract Sequence Number</div>
+                                <div class="seq-number-value">${result.sequence_number}</div>
+                                <div class="seq-number-hint">${hintText}</div>
+                            </div>
+                        `;
+                    }
+
+                    btn.innerHTML = '✓ Registered';
+                    btn.classList.add('btn-success');
+                    document.getElementById('btn-step7-next').disabled = false;
+                } else {
+                    throw new Error(result.error || result.output || 'Failed');
+                }
+            } catch (error) {
+                document.getElementById('register-output').innerHTML = createErrorTerminal(error.message);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+            }
+        }
+
+        async function viewReceipt() {
+            const btn = document.getElementById('btn-receipt');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Loading...';
+
+            try {
+                const response = await fetch('/api/step/view-receipt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ config: getConfig() })
+                });
+
+                const result = await response.json();
+                document.getElementById('receipt-output').innerHTML = result.success 
+                    ? createSuccessTerminal(result.output) 
+                    : createErrorTerminal(result.output);
+                btn.innerHTML = '✓ Loaded';
+                btn.classList.add('btn-success');
+            } catch (error) {
+                document.getElementById('receipt-output').innerHTML = createErrorTerminal(error.message);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+            }
+        }
+
+        async function validateContract() {
+            const btn = document.getElementById('btn-validate');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Validating...';
+
+            try {
+                const response = await fetch('/api/step/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ config: getConfig() })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('validate-output').innerHTML = `
+                        <div class="info-box success-box" style="margin-top: 1rem;">
+                            <span class="info-box-icon">✅</span>
+                            <div class="info-box-content">
+                                <div class="info-box-title">Contract Validated Successfully</div>
+                                <div class="info-box-text">The signed contract and receipt are verified.</div>
+                            </div>
+                        </div>
+                    ` + createSuccessTerminal(result.output);
+                    btn.innerHTML = '✓ Validated';
+                    btn.classList.add('btn-success');
+                    
+                    // Show appropriate completion actions based on role
+                    showCompletionActions();
+                } else {
+                    throw new Error(result.error || result.output || 'Failed');
+                }
+            } catch (error) {
+                document.getElementById('validate-output').innerHTML = createErrorTerminal(error.message);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+            }
+        }
+
+        function showCompletionActions() {
+            const tdpCompletion = document.getElementById('tdp-completion');
+            const tdcCompletion = document.getElementById('tdc-completion');
+            
+            if (state.role === 'tdp') {
+                tdpCompletion.style.display = 'block';
+                tdcCompletion.style.display = 'none';
+                
+                // Display the stored sequence number
+                if (state.contractSeqNo) {
+                    document.getElementById('stored-seq-no').textContent = state.contractSeqNo;
+                }
+            } else {
+                tdpCompletion.style.display = 'none';
+                tdcCompletion.style.display = 'block';
+            }
+        }
+
+        function continueAsTDC() {
+            // Store the sequence number for TDC to use
+            const seqNo = state.contractSeqNo;
+            
+            // Reset state but keep scenario and contract
+            const currentScenario = state.scenario;
+            const currentTemplate = state.templateJson;
+            const currentContract = state.contractJson;
+            
+            // Reset to step 3 (role selection) as TDC
+            state = {
+                currentStep: 3,
+                scenario: currentScenario,
+                role: null,
+                contractSeqNo: seqNo,
+                templateJson: currentTemplate,
+                contractJson: currentContract
+            };
+            
+            // Reset UI elements
+            document.querySelectorAll('.role-card').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('[id$="-output"]:not([id="update-output"])').forEach(el => el.innerHTML = '');
+            document.querySelectorAll('.btn-success').forEach(el => {
+                if (!el.id.includes('update')) {
+                    el.classList.remove('btn-success');
+                }
+            });
+            
+            // Pre-fill retrieve seq number for TDC
+            document.getElementById('retrieve_seq_no').value = seqNo;
+            document.getElementById('sign_seq_no').value = seqNo;
+            
+            // Reset step buttons
+            document.getElementById('btn-step3-next').disabled = true;
+            document.getElementById('btn-step5-5-next').disabled = true;
+            document.getElementById('btn-step6-next').disabled = true;
+            document.getElementById('btn-step7-next').disabled = true;
+            
+            // Reset action buttons
+            resetActionButton('btn-create-did', 'Create DID');
+            resetActionButton('btn-verify-did', 'Verify DID');
+            resetActionButton('btn-retrieve', 'Retrieve Contract');
+            resetActionButton('btn-sign', 'Sign Contract');
+            resetActionButton('btn-register', 'Register Contract');
+            resetActionButton('btn-receipt', 'View Receipt');
+            resetActionButton('btn-validate', 'Validate Contract');
+            
+            // Reset step-specific outputs
+            document.getElementById('seq-number-result').innerHTML = '';
+            document.getElementById('did-output').innerHTML = '';
+            document.getElementById('verify-output').innerHTML = '';
+            document.getElementById('retrieve-output').innerHTML = '';
+            document.getElementById('sign-output').innerHTML = '';
+            document.getElementById('register-output').innerHTML = '';
+            document.getElementById('receipt-output').innerHTML = '';
+            document.getElementById('validate-output').innerHTML = '';
+            
+            // Show info banner about continuing as TDC
+            document.getElementById('step-3').querySelector('.step-card').insertAdjacentHTML('afterbegin', `
+                <div class="info-box" style="margin-bottom: 1rem;" id="tdc-transition-banner">
+                    <span class="info-box-icon">🔄</span>
+                    <div class="info-box-content">
+                        <div class="info-box-title">Continuing as TDC</div>
+                        <div class="info-box-text">
+                            You're now signing the contract as Training Data Consumer. 
+                            The contract sequence number <strong>${seqNo}</strong> has been pre-filled for you.
+                        </div>
+                    </div>
+                </div>
+            `);
+            
+            goToStep(3);
+        }
+
+        // ==================== GitHub Authentication ====================
+        let githubAuthState = {
+            isLoggedIn: false,
+            username: null,
+            deviceFlowPending: false,
+            pollInterval: null
+        };
+
+        async function checkGitHubAuth() {
+            const statusEl = document.getElementById('github-auth-status');
+            const loggedInEl = document.getElementById('github-logged-in');
+            const loginEl = document.getElementById('github-login');
+            const pendingEl = document.getElementById('github-pending');
+            
+            // Show checking state
+            statusEl.innerHTML = '<span class="status-indicator checking"></span><span class="status-text">Checking...</span>';
+            
+            try {
+                const response = await fetch('/api/github/status');
+                const result = await response.json();
+                
+                githubAuthState.isLoggedIn = result.logged_in;
+                githubAuthState.username = result.username;
+                
+                if (result.logged_in) {
+                    statusEl.innerHTML = '<span class="status-indicator logged-in"></span><span class="status-text">Authenticated</span>';
+                    document.getElementById('github-username').textContent = '@' + (result.username || 'unknown');
+                    loggedInEl.style.display = 'flex';
+                    loginEl.style.display = 'none';
+                    pendingEl.style.display = 'none';
+                } else {
+                    statusEl.innerHTML = '<span class="status-indicator logged-out"></span><span class="status-text">Not logged in</span>';
+                    loggedInEl.style.display = 'none';
+                    loginEl.style.display = 'block';
+                    pendingEl.style.display = 'none';
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status-indicator logged-out"></span><span class="status-text">Error</span>';
+                console.error('Error checking GitHub auth:', error);
+            }
+        }
+
+        async function loginGitHubDevice() {
+            const btn = document.getElementById('btn-github-device');
+            const loginEl = document.getElementById('github-login');
+            const pendingEl = document.getElementById('github-pending');
+            const outputEl = document.getElementById('github-auth-output');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> Starting...';
+            
+            try {
+                const response = await fetch('/api/github/login-device', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.waiting_for_auth) {
+                    // Show pending state with device code
+                    loginEl.style.display = 'none';
+                    pendingEl.style.display = 'flex';
+                    
+                    if (result.device_code) {
+                        document.getElementById('device-code').textContent = result.device_code;
+                    }
+                    if (result.auth_url) {
+                        const urlEl = document.getElementById('device-auth-url');
+                        urlEl.href = result.auth_url;
+                        urlEl.textContent = result.auth_url.replace('https://', '');
+                    }
+                    
+                    // Open the auth URL in a new tab
+                    window.open(result.auth_url || 'https://github.com/login/device', '_blank');
+                    
+                    // Start polling for auth completion
+                    githubAuthState.deviceFlowPending = true;
+                    startAuthPolling();
+                    
+                } else if (result.success) {
+                    await checkGitHubAuth();
+                    outputEl.innerHTML = `
+                        <div class="info-box success-box" style="margin-top: 0.75rem;">
+                            <span class="info-box-icon">✅</span>
+                            <div class="info-box-content">
+                                <div class="info-box-text">Successfully logged in!</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || result.output || 'Login failed');
+                }
+            } catch (error) {
+                outputEl.innerHTML = createErrorTerminal(error.message);
+                btn.disabled = false;
+                btn.innerHTML = 'Login with GitHub';
+            }
+        }
+
+        async function loginGitHubToken() {
+            const token = document.getElementById('github-token').value.trim();
+            const outputEl = document.getElementById('github-auth-output');
+            
+            if (!token) {
+                alert('Please enter your GitHub Personal Access Token');
+                return;
+            }
+            
+            outputEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;"><span class="spinner" style="display: inline-block; vertical-align: middle;"></span> Authenticating...</div>';
+            
+            try {
+                const response = await fetch('/api/github/login-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('github-token').value = '';
+                    await checkGitHubAuth();
+                    outputEl.innerHTML = `
+                        <div class="info-box success-box" style="margin-top: 0.75rem;">
+                            <span class="info-box-icon">✅</span>
+                            <div class="info-box-content">
+                                <div class="info-box-text">Successfully logged in as @${result.username}!</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || result.output || 'Login failed');
+                }
+            } catch (error) {
+                outputEl.innerHTML = `
+                    <div class="info-box warning-box" style="margin-top: 0.75rem;">
+                        <span class="info-box-icon">⚠️</span>
+                        <div class="info-box-content">
+                            <div class="info-box-text">${escapeHtml(error.message)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function startAuthPolling() {
+            // Poll every 3 seconds to check if auth completed
+            githubAuthState.pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/github/status');
+                    const result = await response.json();
+                    
+                    if (result.logged_in) {
+                        cancelDeviceFlow();
+                        await checkGitHubAuth();
+                        document.getElementById('github-auth-output').innerHTML = `
+                            <div class="info-box success-box" style="margin-top: 0.75rem;">
+                                <span class="info-box-icon">✅</span>
+                                <div class="info-box-content">
+                                    <div class="info-box-text">Successfully logged in as @${result.username}!</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error polling auth status:', error);
+                }
+            }, 3000);
+        }
+
+        function cancelDeviceFlow() {
+            githubAuthState.deviceFlowPending = false;
+            if (githubAuthState.pollInterval) {
+                clearInterval(githubAuthState.pollInterval);
+                githubAuthState.pollInterval = null;
+            }
+            
+            const loginEl = document.getElementById('github-login');
+            const pendingEl = document.getElementById('github-pending');
+            const btn = document.getElementById('btn-github-device');
+            
+            loginEl.style.display = 'block';
+            pendingEl.style.display = 'none';
+            btn.disabled = false;
+            btn.innerHTML = 'Login with GitHub';
+        }
+
+        async function logoutGitHub() {
+            try {
+                const response = await fetch('/api/github/logout', { method: 'POST' });
+                const result = await response.json();
+                await checkGitHubAuth();
+                document.getElementById('github-auth-output').innerHTML = `
+                    <div class="info-box" style="margin-top: 0.75rem;">
+                        <span class="info-box-icon">ℹ️</span>
+                        <div class="info-box-content">
+                            <div class="info-box-text">${escapeHtml(result.output)}</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        // ==================== End GitHub Authentication ====================
+
+        function resetDemo() {
+            state = { currentStep: 1, scenario: null, role: null, contractSeqNo: null, templateJson: null, contractJson: null };
+
+            document.querySelectorAll('.scenario-card, .role-card').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('[id$="-output"]').forEach(el => el.innerHTML = '');
+            document.querySelectorAll('.btn-success').forEach(el => el.classList.remove('btn-success'));
+            document.getElementById('btn-step1-next').disabled = true;
+            document.getElementById('btn-step3-next').disabled = true;
+            document.getElementById('btn-step5-5-next').disabled = true;
+            document.getElementById('btn-step6-next').disabled = true;
+            document.getElementById('btn-step7-next').disabled = true;
+            document.getElementById('seq-number-result').innerHTML = '';
+
+            // Reset buttons to original state
+            const btnUpdate = document.getElementById('btn-update-contract');
+            btnUpdate.innerHTML = 'Update Contract & Continue →';
+            btnUpdate.onclick = updateContract;
+
+            // Reset action buttons
+            resetActionButton('btn-create-did', 'Create DID');
+            resetActionButton('btn-verify-did', 'Verify DID');
+            resetActionButton('btn-retrieve', 'Retrieve Contract');
+            resetActionButton('btn-sign', 'Sign Contract');
+            resetActionButton('btn-register', 'Register Contract');
+            resetActionButton('btn-receipt', 'View Receipt');
+            resetActionButton('btn-validate', 'Validate Contract');
+
+            updateContractPanel(null, 'empty', null);
+            goToStep(1);
+        }
+
+        function createSuccessTerminal(output) {
+            return `
+                <div class="output-terminal">
+                    <div class="terminal-header">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                    </div>
+                    <div class="terminal-body">
+                        <pre class="success">${escapeHtml(output)}</pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createErrorTerminal(message) {
+            return `
+                <div class="output-terminal">
+                    <div class="terminal-header">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                    </div>
+                    <div class="terminal-body">
+                        <pre class="error">Error: ${escapeHtml(message)}</pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function resetActionButton(buttonId, defaultText) {
+            const btn = document.getElementById(buttonId);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = defaultText;
+                btn.classList.remove('btn-success');
+            }
+        }
+
+        async function shutdownServer() {
+            if (!confirm('Are you sure you want to shutdown the demo server?\n\nThe server will stop and you\'ll need to run launch-demo.sh again to restart it.')) {
+                return;
+            }
+
+            try {
+                // Display shutdown message immediately
+                document.body.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                        <h1 style="color: var(--accent-green); margin-bottom: 0.5rem;">Server Shutting Down</h1>
+                        <p style="color: var(--text-secondary); font-size: 1.1rem;">
+                            The demo server has been gracefully stopped.<br>
+                            You can close this browser tab.
+                        </p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 1.5rem;">
+                            Run <code style="background: var(--bg-tertiary); padding: 0.3rem 0.6rem; border-radius: 4px;">./launch-demo.sh</code> to restart the server.
+                        </p>
+                    </div>
+                `;
+
+                // Send shutdown request
+                await fetch('/api/shutdown', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error) {
+                // Error is expected as server shuts down
+                console.log('Server shutdown initiated');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgressSteps();
+            updateContractPanel(null, 'empty', null);
+        });
+    </script>
+</body>
+</html>

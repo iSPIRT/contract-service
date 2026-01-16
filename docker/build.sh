@@ -20,7 +20,8 @@ fi
 git submodule sync
 git submodule update --init --recursive
 
-SCITT_VERSION_OVERRIDE=$(git describe --tags --match="*.*.*")
+# Try to get version from git tags, fallback to commit hash if no tags exist
+SCITT_VERSION_OVERRIDE=$(git describe --tags --match="*.*.*" 2>/dev/null || git rev-parse --short HEAD)
 
 DOCKER_BUILDKIT=1 docker build \
     -t "$DOCKER_TAG" \

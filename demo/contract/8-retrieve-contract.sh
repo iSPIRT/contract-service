@@ -4,6 +4,7 @@
 
 set -ex
 
+CONTRACT_SEQ_NO=$1
 CONTRACT_SERVICE_URL=${CONTRACT_SERVICE_URL:-"https://127.0.0.1:8000"}
 TRUST_STORE=/tmp/trust_store
 

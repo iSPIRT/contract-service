@@ -1,0 +1,33 @@
+[Unit]
+Description=SCITT Contract Ledger Service
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/root/contract-ledger
+Environment="PLATFORM=virtual"
+Environment="CONTAINER_NAME=scitt-service"
+
+# Start command
+ExecStart=/root/contract-ledger/docker/run-service.sh
+
+# Stop command
+ExecStop=/usr/bin/docker stop scitt-service
+
+# Restart policy - always restart unless explicitly stopped
+Restart=on-failure
+RestartSec=10s
+StartLimitInterval=200s
+StartLimitBurst=5
+
+# Maintenance-friendly timeouts
+TimeoutStartSec=300s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target
+
+

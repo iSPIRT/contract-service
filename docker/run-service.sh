@@ -1,0 +1,140 @@
+#!/bin/bash
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+set -e
+
+# Check if Python3.x is installed
+if ! command -v python3 &> /dev/null; then
+    echo "Python is not installed"
+    exit 1
+fi
+
+# Get the Python version, pyscitt requires version 3.8 or more
+PYTHON_VERSION=$(python3 -c 'import sys; version=sys.version_info; print(f"{version[1]}")')
+
+MINIMUM_VERSION=3.8
+
+MINIMUM_VERSION=$(echo $MINIMUM_VERSION | cut -d. -f2)
+
+# Compare the Python version
+if awk 'BEGIN { if (('$PYTHON_VERSION' < '$MINIMUM_VERSION')) exit 0; exit 1 }'; then
+    echo "Installed version python3.$PYTHON_VERSION should be greater than python3.$MINIMUM_VERSION"
+    echo "On Ubuntu, run: apt install python3.$MINIMUM_VERSION python3.$MINIMUM_VERSION-venv"
+    exit 1
+fi
+
+PLATFORM=${PLATFORM:-virtual}
+CCF_HOST=${CCF_HOST:-"localhost"}
+CCF_PORT=${CCF_PORT:-8000}
+CCF_URL="https://${CCF_HOST}:${CCF_PORT}"
+
+DOCKER_TAG=${DOCKER_TAG:-"scitt-$PLATFORM"}
+CONTAINER_NAME=${CONTAINER_NAME:-"scitt-service"}
+
+WORKSPACE=${WORKSPACE:-"workspace/"}
+
+VOLUME_NAME="${CONTAINER_NAME}-vol"
+
+rm -rf "$WORKSPACE"
+mkdir -p "$WORKSPACE"
+
+cp ./docker/dev-config.tmpl.json "$WORKSPACE"/dev-config.json
+if [ "$PLATFORM" = "sgx" ]; then
+    enclave_platform="SGX"
+    enclave_type="Release"
+    enclave_file="libscitt.enclave.so.signed"
+    DOCKER_FLAGS=(
+        "--device" "/dev/sgx_enclave:/dev/sgx_enclave"
+        "--device" "/dev/sgx_provision:/dev/sgx_provision"
+    )
+elif [ "$PLATFORM" = "virtual" ]; then
+    enclave_platform="Virtual"
+    enclave_type="Virtual"
+    enclave_file="libscitt.virtual.so"
+    DOCKER_FLAGS=()
+fi
+sed -i "s/%ENCLAVE_PLATFORM%/$enclave_platform/g" "$WORKSPACE"/dev-config.json
+sed -i "s/%ENCLAVE_TYPE%/$enclave_type/g" "$WORKSPACE"/dev-config.json
+sed -i "s/%ENCLAVE_FILE%/$enclave_file/g" "$WORKSPACE"/dev-config.json
+sed -i "s/%CCF_PORT%/$CCF_PORT/g" "$WORKSPACE"/dev-config.json
+
+cp -r ./app/constitution "$WORKSPACE"
+
+KEYGEN=$(pwd)/docker/keygenerator.sh
+pushd "$WORKSPACE"
+$KEYGEN --name member0 --gen-enc-key
+popd
+
+# Create a volume to store the workspace
+# This works reliably on host as well as Docker-in-Docker
+docker volume create "$VOLUME_NAME" || true
+
+# Copy the workspace to the volume
+# Note that this requires running a temporary container
+# https://stackoverflow.com/a/56085040
+tar -C "$WORKSPACE" -c . | docker run --rm \
+    -v "$VOLUME_NAME":/host -i \
+    --entrypoint "" \
+    "$DOCKER_TAG" tar -C /host -x
+
+# Determine networking flags
+if [ "$DOCKER_IN_DOCKER" = "1" ]; then
+    # This assumes that the container we're running in
+    # wasn't started with a custom hostname.
+    DOCKER_FLAGS+=(
+        "--network=container:$(hostname)"
+    )
+else
+    DOCKER_FLAGS+=(
+        "--network=host"
+    )
+fi
+
+# Run CCF with restart policy
+docker run --name "$CONTAINER_NAME" \
+    -d \
+    --restart unless-stopped \
+    "${DOCKER_FLAGS[@]}" \
+    -v "$VOLUME_NAME":/host \
+    "$DOCKER_TAG" --config /host/dev-config.json
+
+echo "Setting up python virtual environment."
+if [ ! -f "venv/bin/activate" ]; then
+    python3 -m venv "venv"
+fi
+source venv/bin/activate 
+pip install --disable-pip-version-check -q -e ./pyscitt
+
+timeout=15
+while ! curl -s -f -k "$CCF_URL"/node/network > /dev/null; do
+    echo "Waiting for CCF to start..."
+    sleep 1
+    timeout=$((timeout - 1))
+    if [ $timeout -eq 0 ]; then
+        echo "CCF failed to start, exiting"
+        echo "Docker logs:"
+        docker logs "$CONTAINER_NAME"
+        exit 1
+    fi
+done
+
+scitt governance local_development \
+    --url "$CCF_URL" \
+    --member-key "$WORKSPACE"/member0_privk.pem \
+    --member-cert "$WORKSPACE"/member0_cert.pem
+
+echo ""
+echo "✅ SCITT service is running at: ${CCF_URL}"
+echo ""
+echo "Container name: $CONTAINER_NAME"
+echo ""
+echo "Management commands:"
+echo "  Stop service:     docker stop $CONTAINER_NAME"
+echo "  Start service:    docker start $CONTAINER_NAME"
+echo "  Restart service:  docker restart $CONTAINER_NAME"
+echo "  View logs:        docker logs -f $CONTAINER_NAME"
+echo "  Remove service:   docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME && docker volume rm $VOLUME_NAME"
+echo ""
+
+
