@@ -26,11 +26,9 @@ if ! [ -z $OPERATOR ]; then
 fi
 
 CONTRACT_DIR=/tmp/contracts
-rm -rf $CONTRACT_DIR
 mkdir -p $CONTRACT_DIR
 
 TRUST_STORE=/tmp/trust_store
-rm -rf $TRUST_STORE
 mkdir -p $TRUST_STORE
 
 curl -k -f $CONTRACT_SERVICE_URL/parameters > $TRUST_STORE/scitt.json

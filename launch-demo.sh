@@ -25,6 +25,9 @@ echo "║                                                                  ║"
 echo "╚══════════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
+# Install prerequisites if not already installed
+./install-prerequisites.sh
+
 # Check Python
 if ! command -v python3 &> /dev/null; then
     echo -e "${RED}Error: Python 3 is required but not installed.${NC}"

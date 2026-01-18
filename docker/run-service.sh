@@ -91,6 +91,9 @@ else
     )
 fi
 
+rm -rf /tmp/contracts
+rm -rf /tmp/trust_store
+
 # Run CCF with restart policy
 docker run --name "$CONTAINER_NAME" \
     -d \

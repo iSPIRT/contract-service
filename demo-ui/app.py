@@ -574,6 +574,15 @@ def github_status():
 @app.route('/api/github/login-device', methods=['POST'])
 def github_login_device():
     """Initiate GitHub device flow login."""
+    # First check if gh CLI is installed
+    gh_check = run_command("command -v gh")
+    if not gh_check["success"] or not gh_check["stdout"].strip():
+        return jsonify({
+            "success": False,
+            "error": "GitHub CLI (gh) is not installed. Please install it from https://cli.github.com/",
+            "output": "GitHub CLI (gh) is required for authentication. Install it using:\n  sudo apt install gh\n  or visit https://cli.github.com/"
+        })
+    
     # Need --web for non-interactive mode, but we'll kill the process fast
     # before it opens the browser. Frontend will open it in a new tab.
     cmd = "gh auth login --hostname github.com --web 2>&1"
@@ -582,6 +591,8 @@ def github_login_device():
         # Set BROWSER env var to a no-op to prevent gh from opening browser
         env = os.environ.copy()
         env['BROWSER'] = '/bin/true'  # No-op command that always succeeds
+        # Use unbuffered output
+        env['PYTHONUNBUFFERED'] = '1'
         
         process = subprocess.Popen(
             cmd,
@@ -592,7 +603,8 @@ def github_login_device():
             stdin=subprocess.PIPE,
             text=True,
             executable='/bin/bash',
-            env=env
+            env=env,
+            bufsize=0  # Unbuffered
         )
         
         # Read output until we get the device code
@@ -601,33 +613,55 @@ def github_login_device():
         auth_url = None
         
         import time
+        import select
         
-        # Read initial output to get device code (with timeout)
+        # Read initial output to get device code (with longer timeout)
         start_time = time.time()
+        max_wait = 5  # Increased from 2 to 5 seconds
         
-        while time.time() - start_time < 2:  # Wait max 2 seconds for device code
-            # Use select to check if output is available
-            import select
-            ready, _, _ = select.select([process.stdout], [], [], 0.05)
+        while time.time() - start_time < max_wait:
+            # Use select to check if output is available (with timeout)
+            ready, _, _ = select.select([process.stdout], [], [], 0.1)
             
             if ready:
                 line = process.stdout.readline()
                 if not line:
-                    break
+                    # Check if process has exited
+                    if process.poll() is not None:
+                        break
+                    continue
                 output_lines.append(line)
                 
-                # Look for the one-time code
-                if "one-time code" in line.lower() or "code:" in line.lower():
-                    match = re.search(r'([A-Z0-9]{4}-[A-Z0-9]{4})', line)
-                    if match and not device_code:
-                        device_code = match.group(1)
-                        # Got the code! Kill the process immediately to prevent browser opening
-                        try:
-                            process.kill()  # Use kill() not terminate() for immediate stop
-                            process.wait(timeout=0.5)
-                        except:
-                            pass
+                # Look for the one-time code in various formats
+                line_lower = line.lower()
+                if "one-time code" in line_lower or "code:" in line_lower or "enter this code" in line_lower:
+                    # Try multiple patterns for device code
+                    patterns = [
+                        r'([A-Z0-9]{4}-[A-Z0-9]{4})',  # Standard format: ABCD-1234
+                        r'code:\s*([A-Z0-9-]+)',       # "code: ABCD-1234"
+                        r'([A-Z0-9]{4}[-\s][A-Z0-9]{4})',  # With space: ABCD 1234
+                    ]
+                    for pattern in patterns:
+                        match = re.search(pattern, line, re.IGNORECASE)
+                        if match and not device_code:
+                            device_code = match.group(1).replace(' ', '-')
+                            # Got the code! Kill the process immediately to prevent browser opening
+                            try:
+                                process.kill()  # Use kill() not terminate() for immediate stop
+                                process.wait(timeout=0.5)
+                            except:
+                                pass
+                            break
+                    if device_code:
                         break
+            
+            # Also check if process has exited early
+            if process.poll() is not None:
+                # Process exited, read any remaining output
+                remaining = process.stdout.read()
+                if remaining:
+                    output_lines.append(remaining)
+                break
         
         # Clean up the process if still running
         if process.poll() is None:
@@ -638,6 +672,17 @@ def github_login_device():
                 pass
         
         output = ''.join(output_lines)
+        
+        # Check if process failed with an error
+        if process.returncode and process.returncode != -9:  # -9 is SIGKILL which is expected
+            # Process failed, return error
+            if not output:
+                output = "GitHub CLI command failed. Please ensure GitHub CLI is properly installed."
+            return jsonify({
+                "success": False,
+                "error": f"GitHub CLI command failed (exit code: {process.returncode})",
+                "output": output
+            })
         
         # If we have a device code, return it for the UI
         if device_code:
@@ -650,17 +695,32 @@ def github_login_device():
                 "message": f"Please visit https://github.com/login/device and enter code: {device_code}"
             })
         
-        # No device code found
+        # No device code found - provide helpful error message
+        if not output:
+            return jsonify({
+                "success": False,
+                "error": "Could not retrieve device code. No output from GitHub CLI.",
+                "output": "The GitHub CLI command did not produce any output. Please ensure:\n1. GitHub CLI is properly installed\n2. You have network connectivity\n3. Try running 'gh auth login' manually in a terminal"
+            })
+        
         return jsonify({
             "success": False,
-            "error": "Could not retrieve device code",
-            "output": output
+            "error": "Could not retrieve device code from GitHub CLI output",
+            "output": output,
+            "hint": "The device code should appear in the output. Please check the output above for any error messages."
         })
         
+    except FileNotFoundError:
+        return jsonify({
+            "success": False,
+            "error": "GitHub CLI (gh) command not found",
+            "output": "Please install GitHub CLI from https://cli.github.com/ or using: sudo apt install gh"
+        })
     except Exception as e:
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": f"Error starting GitHub authentication: {str(e)}",
+            "output": f"Exception: {str(e)}\n\nPlease ensure GitHub CLI is installed and try again."
         })
 
 

@@ -15,9 +15,23 @@ All instructions below assume Linux as the operating system.
 
 ### Quick Demo
 
-A live demo contract service (single-node, virtual mode) is available at **https://216.48.178.54:8000**. You can interact with it using the [demo UI](./demo-ui/README.md), which provides a user-friendly web interface for demonstrating multi-party electronic contract signing for select DEPA Training scenarios. To get started, run `./launch-demo.sh` from the project root and open your browser to http://localhost:5050.
+A live contract ledger service (single-node, virtual mode) for demos is available at **https://216.48.178.54:8000**. This service can be used to sign contracts and register them on the ledger via the [demo UI](./demo-ui/README.md). This GUI application provides a user-friendly web interface for demonstrating multi-party electronic contract signing for selected DEPA training scenarios.
 
-If you encounter any issues with the live demo service, please contact the repository owners by opening an issue.
+The quickest way to get started is to create a GitHub Codespace on the `main` branch, run `./launch-demo.sh` from the project root, then open your browser and navigate to **http://localhost:5050**
+
+1. Go to **Code → Codespaces → Create codespace on main**
+2. Open a terminal and run:
+   ```bash
+   ./launch-demo.sh
+   ```
+   This script installs all required prerequisites and launches the demo UI.
+3. Open your browser and navigate to **http://localhost:5050**
+
+This demo requires two GitHub accounts and corresponding GitHub Pages user/organization sites, one for the Training Data Providers (TDPs - represented in this demo by a single entity for sake of simplicity) and one for the Training Data Consumer (TDC). To create a GitHub page site, follow the [GitHub Pages user/organization documentation](https://pages.github.com/). You will be asked to create a new repository with the URL `<username>.github.io`. If you don't have two GitHub accounts or you don't want to use the GitHub Pages site associated with your account, you can create a new user on [GitHub](https://github.com/signup).
+
+Note: If you’re using GitHub Codespaces, be sure to create and use separate Codespace instances under the respective GitHub accounts for the TDP and TDC, when executing the contract signing steps specific to each of them.
+
+If you encounter any issues with the live demo service, please contact the repository owners by opening an issue. To run your own instance of the contract service, follow the instructions below.
 
 ### Build and Deploy using Docker
 

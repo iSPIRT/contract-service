@@ -1,16 +1,18 @@
 # Contract Service Demo
 
-This demo shows participants in the DEPA training framework using a [did:web](https://w3c-ccg.github.io/did-method-web/) identifier hosted on GitHub to sign and submit contracts, receive receipts, and validate them. The specific scenario involves two participants, a training data provider (TDP), who provides three datasets, and a training data consumer (TDC) who wishes to consume the datasets to train a model. 
+This demo shows participants in the DEPA-Training framework using a [did:web](https://w3c-ccg.github.io/did-method-web/) identifier hosted on GitHub to sign and submit contracts, receive receipts, and validate them. The specific scenario involves multiple participants, training data providers (TDPs), who provide datasets, and a training data consumer (TDC) who wishes to consume the datasets to train a model within a Confidential Cleanroom (CCR). 
+
+For a quick GUI based demo for selected DEPA-Training scenarios, follow the instructions in the [demo UI](../../demo-ui/README.md) README after completing the prerequisites.
 
 ## Prerequisites
 
 This demo requires a running contract service, and two GitHub accounts and two GitHub Pages user/organization sites, one for the TDPs (or a Data Collective aggregating and publishing datasets) and one for the TDC. To create a GitHub page site, follow the [GitHub Pages user/organization documentation](https://pages.github.com/). You will be asked to create a new repository with the URL `<username>.github.io`. If you don't have two GitHub accounts or you don't want to use the GitHub Pages site associated with your account, you can create a new user on [GitHub](https://github.com/signup).
 
-If you plan to use the contract with a CCR, you will need the location of the key vault that contains the TDP's encryption keys. 
+To execute the contract within a Confidential Cleanroom (CCR), you will need the location of the key vault that contains the TDP's encryption keys. 
 
 ## Contract Creation
 
-The demo folder contains a [sample contract](contract.json). Modify the contract as per your requirements, including
+The demo folder contains a [sample contract](contract_template.json). Modify the contract as per your requirements, including
 - DIDs of the participants
 - names of the datasets
 - key identifiers and location of the data encryption keys

@@ -72,6 +72,25 @@ fi
 # --- jq ---
 check_and_install jq jq "sudo apt install -y jq" "jq --version"
 
+# --- GitHub CLI (gh) ---
+if command -v gh >/dev/null 2>&1; then
+    ver=$(gh --version | head -n 1)
+    echo "[OK] GitHub CLI (gh) is already installed: $ver"
+    record_result "GitHub CLI (gh)" "Already Installed" "$ver"
+else
+    echo "[Installing] GitHub CLI (gh)..."
+    # Try installing from default repositories first
+    if ! sudo apt install -y gh 2>/dev/null; then
+        # If apt package not available, use official installation method
+        echo "[Installing] Adding GitHub CLI official repository..."
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        sudo apt update -qq
+        sudo apt install -y gh
+    fi
+    ver=$(gh --version 2>/dev/null | head -n 1 || echo "installed")
+    record_result "GitHub CLI (gh)" "Installed Now" "$ver"
+fi
 
 # --- Docker ---
 if command -v docker >/dev/null 2>&1; then

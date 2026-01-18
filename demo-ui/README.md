@@ -14,6 +14,8 @@ Then open your browser to **http://localhost:5050**
 
 By default, the demo connects to a live contract service at **https://216.48.178.54:8000**. You can change this in the UI configuration if you're running a local instance. If you encounter any issues with the live demo service, please contact the repository owners by opening an issue.
 
+The demo contains steps for both the TDP and TDC to sign and register the contract. If you're using GitHub Codespaces to run this demo, make sure to use separate instances under the respective GitHub accounts for the TDP and TDC, when executing the contract signing steps specific to each. This ensures hassle-free authentication and avoids login conflicts.
+
 ## Features
 
 ### Scenario Selection
@@ -89,8 +91,7 @@ For a full demonstration of multi-party contract signing:
    - Note the **sequence number** displayed
 
 2. **Switch to TDC:**
-   - Click "Logout GitHub" 
-   - Sign out in IDE (Ctrl+Shift+P → Sign out of GitHub)
+   - Click "Logout GitHub". This may still result in conflicts, so it's recommended to use a separate Codespace instance under the TDC GitHub account.
    - Select "TDC" role
    - Enter the sequence number from TDP
    - Create DID (authenticate as TDC GitHub account)
