@@ -376,11 +376,11 @@ def register_contract_tdp():
 
 @app.route('/api/step/view-receipt', methods=['POST'])
 def view_receipt():
-    """Run 5-view-receipt.sh."""
+    """Run 11-view-receipt.sh."""
     data = request.json
     config = data.get("config", DEFAULT_CONFIG)
     
-    cmd = "source venv/bin/activate && ./demo/contract/5-view-receipt.sh"
+    cmd = "source venv/bin/activate && ./demo/contract/11-view-receipt.sh"
     result = run_command(cmd, env=config)
     
     return jsonify({
@@ -391,11 +391,11 @@ def view_receipt():
 
 @app.route('/api/step/validate', methods=['POST'])
 def validate():
-    """Run 6-validate.sh."""
+    """Run 12-validate.sh."""
     data = request.json
     config = data.get("config", DEFAULT_CONFIG)
     
-    cmd = "source venv/bin/activate && ./demo/contract/6-validate.sh"
+    cmd = "source venv/bin/activate && ./demo/contract/12-validate.sh"
     result = run_command(cmd, env=config)
     
     return jsonify({
