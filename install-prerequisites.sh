@@ -11,6 +11,8 @@ if ! command -v apt >/dev/null 2>&1; then
     sudo apt-get install -y apt
 fi
 
+sudo apt update
+
 # Arrays to track results
 pkg_names=()
 pkg_status=()
@@ -106,12 +108,25 @@ else
 fi
 
 # --- Docker group setup ---
-if groups "$USER" | grep &>/dev/null '\bdocker\b'; then
+# Check if docker group exists, create it if it doesn't
+if ! getent group docker >/dev/null 2>&1; then
+    echo "[Creating] docker group..."
+    sudo groupadd docker
+fi
+
+# Check if user is root (root doesn't need to be in docker group)
+if [ "$USER" = "root" ]; then
+    echo "[OK] Running as root - no need to add to docker group."
+elif groups "$USER" | grep &>/dev/null '\bdocker\b'; then
     echo "[OK] User '$USER' is already in docker group."
 else
     echo "[Adding] User '$USER' to docker group..."
     sudo usermod -aG docker "$USER"
     echo "You may need to log out and log back in for docker group changes to take effect."
+fi
+
+# Clean up get-docker.sh if it exists
+if [ -f "get-docker.sh" ]; then
     sudo rm get-docker.sh
 fi
 
